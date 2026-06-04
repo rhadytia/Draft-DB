@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Migas Interaktif - Modern Industrial Design</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #121418;
+            --panel-bg: rgba(26, 32, 40, 0.85);
+            --accent-cyan: #00d2ff;
+            --accent-red: #ff3333;
+            --accent-yellow: #ffcc00;
+            --accent-green: #33cc33;
+            --text-main: #e0e6ed;
+            --text-muted: #8b9bb4;
+            --border-color: #2a3441;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(rgba(18, 20, 24, 0.9), rgba(18, 20, 24, 0.95)), 
+                        url('https://images.unsplash.com/photo-1587825227783-a9dcbdb06b45?q=80&w=2070&auto=format&fit=crop') center/cover fixed;
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 250px;
+            background: rgba(20, 24, 30, 0.95);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            background: #4a5568;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--accent-cyan);
+        }
+
+        .menu-section {
+            padding: 15px;
+        }
+
+        .menu-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .menu-item {
+            background: #2d3748;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .menu-item:hover {
+            background: #3a4556;
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .menu-item.active {
+            background: var(--accent-cyan);
+            color: #121418;
+            font-weight: bold;
+            border-left: 3px solid #fff;
+        }
+
+        .stat-box {
+            margin: 10px 15px;
+            padding: 15px;
+            background: #000;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .stat-box.total { border-top: 3px solid #9b59b6; }
+        .stat-box.panjang { border-top: 3px solid var(--accent-cyan); }
+        .stat-box.kebocoran { border-top: 3px solid var(--accent-red); }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .top-header {
+            background: var(--accent-cyan);
+            color: #000;
+            padding: 10px 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filter-indicator {
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.2);
+            padding: 4px 10px;
+            border-radius: 15px;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            flex: 1;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-wide {
+            grid-column: span 3;
+        }
+
+        .panel-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .chart-container {
+            position: relative;
+            flex: 1;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">DASHBOARD</div>
+        
+        <div class="menu-section">
+            <div class="menu-title">FIELD</div>
+            <div class="menu-item filter-field active" data-value="ALL">ALL FIELD</div>
+            <div class="menu-item filter-field" data-value="ADERA">ADERA</div>
+            <div class="menu-item filter-field" data-value="LIMAU">LIMAU</div>
+            <div class="menu-item filter-field" data-value="PENDOPO">PENDOPO</div>
+            <div class="menu-item filter-field" data-value="PRABUMULIH">PRABUMULIH</div>
+            <div class="menu-item filter-field" data-value="RAMBA">RAMBA</div>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-title">YEARS</div>
+            <div class="menu-item filter-year active" data-value="ALL">ALL YEARS</div>
+            <div class="menu-item filter-year" data-value="2021">2021</div>
+            <div class="menu-item filter-year" data-value="2022">2022</div>
+            <div class="menu-item filter-year" data-value="2023">2023</div>
+            <div class="menu-item filter-year" data-value="2024">2024</div>
+        </div>
+
+        <div class="stat-box total">
+            <div class="menu-title">TOTAL TRUNKLINE</div>
+            <div class="stat-value" id="statTotal">129</div>
+        </div>
+        <div class="stat-box panjang">
+            <div class="menu-title">TOTAL PANJANG (METER)</div>
+            <div class="stat-value" id="statPanjang" style="color: var(--accent-cyan)">1,622,232</div>
+        </div>
+        <div class="stat-box kebocoran">
+            <div class="menu-title">JUMLAH TITIK KEBOCORAN</div>
+            <div class="stat-value" id="statKebocoran" style="color: var(--accent-red)">245</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-header">
+            <span>MAPPING DATA TRUNKLINE INTEGRITY ZONA 4</span>
+            <span class="filter-indicator" id="filterIndicator">Active: ALL | ALL</span>
+        </div>
+        
+        <div class="dashboard-grid">
+            <div class="panel">
+                <div class="panel-title">JUMLAH TRUNKLINE PER FIELD</div>
+                <div class="chart-container">
+                    <canvas id="chartJumlah"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">STATUS OPERASI</div>
+                <div class="chart-container">
+                    <canvas id="chartStatus"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">STATUS LEGALITAS</div>
+                <div class="chart-container">
+                    <canvas id="chartLegalitas"></canvas>
+                </div>
+            </div>
+
+            <div class="panel panel-wide">
+                <div class="panel-title">TOP JUMLAH KEBOCORAN TRUNKLINE</div>
+                <div class="chart-container" style="min-height: 280px;">
+                    <canvas id="chartKebocoran"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Management Global
+        let activeField = 'ALL';
+        let activeYear = 'ALL';
+
+        // Dataset Matrix (Dummy Data terstruktur)
+        const baseMatrix = {
+            'ALL': { total: 129, panjang: 1622232, bocor: 245, jumlah: [13, 40, 40, 32, 4], legalitas: [82, 47, 15], bocorLabels: ['BOOSTER TA - PPP PENGABUAN', 'BOOSTER TA - JUMPER BKT', 'SP V KE SKG I', 'SP.3 BENAKAT - JUMPER JIRAK', 'PPP PENGABUAN - BOOSTER SERDANG'], bocorValues: [23, 22, 17, 16, 12] },
+            'ADERA': { total: 13, panjang: 185000, bocor: 28, jumlah: [13, 0, 0, 0, 0], legalitas: [10, 3, 0], bocorLabels: ['SP V KE SKG I', 'SKG I KE SP V', 'SP VII KE JUMPER SP'], bocorValues: [17, 8, 3] },
+            'LIMAU': { total: 40, panjang: 512000, bocor: 88, jumlah: [0, 40, 0, 0, 0], legalitas: [25, 12, 3], bocorLabels: ['BOOSTER TA - PPP PENGABUAN', 'BOOSTER TA - JUMPER BKT', 'SP 2 JIRAK - BOOSTER TL. AKAR'], bocorValues: [23, 22, 12] },
+            'PENDOPO': { total: 40, panjang: 498000, bocor: 75, jumlah: [0, 0, 40, 0, 0], legalitas: [30, 10, 0], bocorLabels: ['SP.3 BENAKAT - JUMPER JIRAK', 'PPP PENGABUAN - BOOSTER SERDANG', 'SP 3 GUNUNG KEMALA KE SKG 3'], bocorValues: [16, 12, 9] },
+            'PRABUMULIH': { total: 32, panjang: 382232, bocor: 48, jumlah: [0, 0, 0, 32, 0], legalitas: [15, 12, 5], bocorLabels: ['SP MUSI TIMUR - JUMPER TERAS', 'PPP PRABUMULIH KE KM 3 PLAJU', 'SP SOPA KE SP 2 JIRAK'], bocorValues: [11, 8, 8] },
+            'RAMBA': { total: 4, panjang: 45000, bocor: 6, jumlah: [0, 0, 0, 0, 4], legalitas: [2, 0, 2], bocorLabels: ['RAMBA TRUNK A', 'RAMBA TRUNK B'], bocorValues: [4, 2] }
+        };
+
+        // Konfigurasi Standar Chart (Tema Gelap)
+        Chart.defaults.color = '#8b9bb4';
+        Chart.defaults.font.family = 'Segoe UI, sans-serif';
+        Chart.defaults.plugins.legend.labels.color = '#e0e6ed';
+
+        // Inisialisasi Chart 1: Jumlah Trunkline
+        const chartJumlah = new Chart(document.getElementById('chartJumlah'), {
+            type: 'bar',
+            data: {
+                labels: ['ADERA', 'LIMAU', 'PENDOPO', 'PRABUMULIH', 'RAMBA'],
+                datasets: [{
+                    label: 'Jumlah Line',
+                    data: [...baseMatrix['ALL'].jumlah],
+                    backgroundColor: '#4a90e2',
+                    borderColor: '#00d2ff',
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#2a3441' } }, x: { grid: { display: false } } } }
+        });
+
+        // Inisialisasi Chart 2: Status Operasi
+        const chartStatus = new Chart(document.getElementById('chartStatus'), {
+            type: 'doughnut',
+            data: {
+                labels: ['OPERASI (OPS)'],
+                datasets: [{ data: [129], backgroundColor: ['#33cc33'], borderWidth: 0, cutout: '75%' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // Inisialisasi Chart 3: Status Legalitas
+        const chartLegalitas = new Chart(document.getElementById('chartLegalitas'), {
+            type: 'doughnut',
+            data: {
+                labels: ['AKTIF', 'ON PROGRESS', 'NEW PROPOSED'],
+                datasets: [{
+                    data: [...baseMatrix['ALL'].legalitas],
+                    backgroundColor: ['#2ecc71', '#f1c40f', '#e74c3c'],
+                    borderWidth: 1,
+                    borderColor: '#1a2028'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // Inisialisasi Chart 4: Top Kebocoran
+        const chartKebocoran = new Chart(document.getElementById('chartKebocoran'), {
+            type: 'bar',
+            data: {
+                labels: [...baseMatrix['ALL'].bocorLabels],
+                datasets: [{
+                    label: 'Titik Bocor',
+                    data: [...baseMatrix['ALL'].bocorValues],
+                    backgroundColor: '#ff3333',
+                    borderRadius: 4
+                }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true, grid: { color: '#2a3441' } }, y: { grid: { display: false } } } }
+        });
+
+        // Fungsi Utama untuk Update Seluruh Komponen Dashboard
+        function updateDashboard() {
+            let dataScope = baseMatrix[activeField];
+
+            // Simulasi kalkulasi tren naik/turun berdasarkan Tahun (Variansi Dummy)
+            let yearMultiplier = 1.0;
+            if (activeYear === '2021') yearMultiplier = 0.82;
+            if (activeYear === '2022') yearMultiplier = 0.91;
+            if (activeYear === '2023') yearMultiplier = 1.05;
+            if (activeYear === '2024') yearMultiplier = 1.15;
+
+            // Hitung nilai statistik baru
+            let finalTotal = dataScope.total;
+            let finalPanjang = dataScope.panjang;
+            let finalBocor = Math.round(dataScope.bocor * (activeYear === 'ALL' ? 1 : yearMultiplier));
+
+            // 1. Update Box Informasi Angka di Kiri
+            document.getElementById('statTotal').innerText = finalTotal;
+            document.getElementById('statPanjang').innerText = finalPanjang.toLocaleString('id-ID');
+            document.getElementById('statKebocoran').innerText = finalBocor;
+
+            // 2. Update Teks Indikator Aktif di Header Atas
+            document.getElementById('filterIndicator').innerText = `Active: ${activeField} | ${activeYear}`;
+
+            // 3. Update Visual Grafik 1 (Jumlah Trunkline)
+            chartJumlah.data.datasets[0].data = dataScope.jumlah;
+            chartJumlah.update();
+
+            // 4. Update Visual Grafik 2 (Status Operasi)
+            chartStatus.data.datasets[0].data = [finalTotal];
+            chartStatus.update();
+
+            // 5. Update Visual Grafik 3 (Legalitas)
+            chartLegalitas.data.datasets[0].data = dataScope.legalitas.map(val => Math.round(val * (activeYear === 'ALL' ? 1 : yearMultiplier * 0.9)));
+            chartLegalitas.update();
+
+            // 6. Update Visual Grafik 4 (Top Kebocoran)
+            chartKebocoran.data.labels = dataScope.bocorLabels;
+            chartKebocoran.data.datasets[0].data = dataScope.bocorValues.map(val => Math.round(val * (activeYear === 'ALL' ? 1 : yearMultiplier)));
+            chartKebocoran.update();
+        }
+
+        // Logic Handler untuk Event Click Filter Field
+        document.querySelectorAll('.filter-field').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.filter-field').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                activeField = this.getAttribute('data-value');
+                updateDashboard();
+            });
+        });
+
+        // Logic Handler untuk Event Click Filter Tahun
+        document.querySelectorAll('.filter-year').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.filter-year').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                activeYear = this.getAttribute('data-value');
+                updateDashboard();
+            });
+        });
+    </script>
+</body>
+</html>
